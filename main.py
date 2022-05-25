@@ -110,9 +110,8 @@ def distance_checker(this_creature, this_food):
             return True
     return False
 
-def creature_eat_handler(this_creature, this_food, this_food_index):
+def creature_eat_handler(this_creature, this_food):
     if distance_checker(this_creature, this_food):
-        del food_list[this_food_index]
         setattr(this_creature, 'food_eaten', this_creature.food_eaten + 1)
         return True
 
@@ -151,8 +150,10 @@ def creature_reset(this_creature):
     setattr(this_creature, 'food_eaten', 0)
     setattr(this_creature, 'energy_left', 10)
 
+
 old_creatures_list = []
-for all in initial_creatures_count:
+
+for each in initial_creatures_count:
     cur_theta = t_pi * rand.random()
     cur_offset_percent = (1 + max_offset_percent * (2 * rand.random() - 1))
     cur_direction = ((cur_theta + m.pi) * cur_offset_percent) % t_pi
@@ -173,18 +174,26 @@ for all in initial_food_amount:
 ########################################################################################################################
 ########################################################################################################################
 
+#Need to repeat this for every day
 for day in range(total_days):
     creature_list_index = 0
     cur_creatures_list = living_creatures_list[creature_list_index]
     creatures_moving = len(cur_creatures_list)
 
+    #While loop instead of a for loop, because it makes handling simpler
     while creatures_moving > 0:
+        #Move each creature in order
         for cur_creature in cur_creatures_list:
             creature_movement(cur_creature)
 
+        #After moving every creature, check if they can eat and handle if they can
         for cur_creature in cur_creatures_list:
             cur_food_index = 0
+            #Check if the creatures have eaten a food, and update the food list if they have. While loop instead of a
+            #for loop because it makes handling simpler.
             while cur_food_index < len(food_list):
                 cur_food = food_list[cur_food_index]
-                if creature_eat_handler(cur_creature, cur_food, cur_food_index):
-                    i = 0
+                if creature_eat_handler(cur_creature, cur_food):
+                    #Update the food list and decrement the index counter by 1 to account for the increment by 1 soon
+                    del food_list[cur_food_index]
+                    cur_food_index -= 1
