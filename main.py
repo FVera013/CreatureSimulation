@@ -20,6 +20,18 @@ time_step = 0.01
 total_time_steps_per_day = time_step
 
 class Creature:
+    """The Creature object that evolve
+
+    Parameters
+    ------------
+    radius: the polar coordinate r of the Creature object
+    theta: the polar coordinate theta of the Creature object
+    direction: the polar theta direction of the vector on which the Creature is currently travelling
+    speed: the magnitude of the direction in which the Creature is currently travelling
+    d1_theta: the first derivative of direction. AKA the first derivative of the Creature's travel theta
+    d2_theta: the second derivative of direction. AKA the second derivative of the Creature's travel theta
+    food_eaten: the amount of food the Creature has currently consumed
+    energy_left: The amount of energy the Creature currently has left ot move"""
     def __init__(self, radius, theta, direction, speed=1, d1_theta=0, d2_theta=0, food_eaten=0, energy_left=10):
         self.radius = radius
         self.theta = theta
@@ -32,6 +44,13 @@ class Creature:
 
 
 class Food:
+    """The Food object that creatures can consume
+
+    Parameters
+    ------------
+    radius: the polar coordinate r of the Food object
+    theta: the polar coordinate theta of the Food object
+    theta_lim: how close a Creature needs to be to this Food in order for it to possibly be withing eating range"""
     def __init__(self, radius, theta, theta_lim):
         self.radius = radius
         self.theta = theta
@@ -53,7 +72,7 @@ def cartesian_to_polar(cart_x, cart_y):
         if cart_x<0 and cart_y<=0: quadrant = 3
         if cart_x<=0 and cart_y<0: quadrant = 4
         if cart_x==0 or cart_y==0: theta = (quadrant-1) * (m.pi/2)
-        if theta!=-1: theta = ((quadrant-1) * (m.pi/2)) + m.arctan( abs( (cart_y/cart_x) ** ((-1)**(quadrant-1)) ) )
+        if theta!=-1: theta = ((quadrant-1) * (m.pi/2)) + m.atan( abs( (cart_y/cart_x) ** ((-1)**(quadrant-1)) ) )
         theta = theta % t_pi
 
     return r, theta
@@ -63,12 +82,20 @@ def position_checker(this_creature):
         setattr(this_creature, 'energy_left', 0)
 
 def creature_movement(this_creature):
+    """A function that returns 0 if a creature has 0 energy at the start of the function call, -1 if it has reached
+    the end of its movement during this function call, or 1 if it has moved and can continue moving."""
+
+    cur_energy = this_creature.energy_left
+    return_value = 0
+
+    if cur_energy <= 0:
+        return return_value
+
     this_j_theta = (rand.random()*2 - 1) * max_j_theta
 
     cur_radius = this_creature.radius
     cur_speed = this_creature.speed
     cur_theta = this_creature.theta
-    cur_energy = this_creature.energy_left
 
     start_x, start_y = polar_to_cartesian(cur_radius, cur_theta)
 
@@ -84,15 +111,17 @@ def creature_movement(this_creature):
 
     if end_r >= map_radius or cur_energy <= 0:
         cur_energy = 0
-
+        return_value = -1
     elif end_r < map_radius and cur_energy > 0:
         cur_energy -= time_step * cur_speed
+        return_value = 1 if cur_energy > 0 else -1
 
     setattr(this_creature, 'radius', end_r)
     setattr(this_creature, 'theta', end_theta)
     setattr(this_creature, 'd1_theta', cur_v_theta)
     setattr(this_creature, 'd2_theta', cur_a_theta)
     setattr(this_creature, 'energy_left', cur_energy)
+    return return_value
 
 def distance_checker(this_creature, this_food):
     """Returns true if the creature and food are in range of each other."""
@@ -119,22 +148,20 @@ def creature_eat_handler(this_creature, this_food):
 
 def creature_next_generation_handler(this_creature, cur_list_index, cur_day_index):
     this_food_eaten = this_creature.food_eaten
-    this_list_index = cur_list_index
+    past_list_index = (cur_list_index + 1) % 2
+
+    creature_reset(this_creature)
 
     if this_food_eaten == 0:
         dead_creatures_list[cur_day_index].append(this_creature)
-        return True
     elif this_food_eaten == 1:
-        creature_reset(this_creature)
-        living_creatures_list[this_list_index].append(this_creature)
-        return True
+        living_creatures_list[cur_list_index].append(this_creature)
     elif this_food_eaten > 1:
-        creature_reset(this_creature)
         child_creature = copy.deepcopy(this_creature)
-        living_creatures_list[this_list_index].append(this_creature)
-        living_creatures_list[this_list_index].append(child_creature)
-        return True
-    return False
+        living_creatures_list[cur_list_index].append(this_creature)
+        living_creatures_list[cur_list_index].append(child_creature)
+
+    del living_creatures_list[past_list_index][0]
 
 def creature_reset(this_creature):
     cur_theta = t_pi * rand.random()
@@ -150,6 +177,11 @@ def creature_reset(this_creature):
     setattr(this_creature, 'food_eaten', 0)
     setattr(this_creature, 'energy_left', 10)
 
+def food_list_reset():
+    food_list.clear()
+    for i in range(initial_food_amount):
+        cur_radius = food_radius * rand.random()
+        food_list.append(Food(cur_radius, t_pi * rand.random(), m.atan(eat_radius / cur_radius)))
 
 old_creatures_list = []
 
@@ -167,15 +199,16 @@ living_creatures_list = [old_creatures_list.copy(), []]
 final_creatures_list = []
 
 food_list = []
-for all in initial_food_amount:
-    cur_radius = food_radius * rand.random()
-    food_list.append(Food(cur_radius, t_pi * rand.random(), m.asin(eat_radius / cur_radius)))
 
 ########################################################################################################################
 ########################################################################################################################
 
 #Need to repeat this for every day
 for day in range(total_days):
+    #Reset food_list at the very beginning of every day
+    food_list_reset()
+
+    #The rest of the logic for the simulation
     creature_list_index = 0
     cur_creatures_list = living_creatures_list[creature_list_index]
     creatures_moving = len(cur_creatures_list)
@@ -184,7 +217,10 @@ for day in range(total_days):
     while creatures_moving > 0:
         #Move each creature in order
         for cur_creature in cur_creatures_list:
-            creature_movement(cur_creature)
+            movement_code = creature_movement(cur_creature)
+            if movement_code == 1:
+                continue
+            creatures_moving += movement_code
 
         #After moving every creature, check if they can eat and handle if they can
         for cur_creature in cur_creatures_list:
@@ -197,3 +233,17 @@ for day in range(total_days):
                     #Update the food list and decrement the index counter by 1 to account for the increment by 1 soon
                     del food_list[cur_food_index]
                     cur_food_index -= 1
+
+                #Increment index counter
+                cur_food_index += 1
+
+        #Check if there's still food on the map
+        if len(food_list) == 0:
+            creatures_moving = 0
+
+    #Moving the next generation of creatures to the next cur_creatures list and recording data
+    past_creature_list_index = creature_list_index
+    creature_list_index = (creature_list_index + 1) % 2
+    #Updating the current list that was being worked with, the one that will be worked with and other data storage lists
+    for creature in cur_creatures_list:
+        creature_next_generation_handler(creature, creature_list_index, day)
