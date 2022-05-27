@@ -1,6 +1,9 @@
 import copy
 import random as rand
 import math as m
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import style
 
 t_pi = 2 * m.pi
 
@@ -152,6 +155,8 @@ def creature_next_generation_handler(this_creature, cur_list_index, cur_day_inde
 
     creature_reset(this_creature)
 
+    creature_pops_list[past_list_index].append(this_creature)
+
     if this_food_eaten == 0:
         dead_creatures_list[cur_day_index].append(this_creature)
     elif this_food_eaten == 1:
@@ -191,8 +196,10 @@ for each in initial_creatures_count:
     cur_direction = ((cur_theta + m.pi) * cur_offset_percent) % t_pi
     old_creatures_list.append(Creature(map_radius, cur_theta, cur_direction))
 
+creature_pops_list = []
 dead_creatures_list = []
 for day in range(total_days):
+    creature_pops_list.append([])
     dead_creatures_list.append([])
 
 living_creatures_list = [old_creatures_list.copy(), []]
@@ -203,13 +210,15 @@ food_list = []
 ########################################################################################################################
 ########################################################################################################################
 
+#Initializing this variable before the loop so it doesn't reset every time the loop starts over
+creature_list_index = 0
+
 #Need to repeat this for every day
 for day in range(total_days):
     #Reset food_list at the very beginning of every day
     food_list_reset()
 
     #The rest of the logic for the simulation
-    creature_list_index = 0
     cur_creatures_list = living_creatures_list[creature_list_index]
     creatures_moving = len(cur_creatures_list)
 
@@ -247,3 +256,38 @@ for day in range(total_days):
     #Updating the current list that was being worked with, the one that will be worked with and other data storage lists
     for creature in cur_creatures_list:
         creature_next_generation_handler(creature, creature_list_index, day)
+
+creature_pops_list[total_days-1].append(copy.deepcopy(living_creatures_list[creature_list_index]))
+
+########################################################################################################################
+########################################################################################################################
+
+#Plotting the Data
+x_axes = []
+y_axes = []
+
+#Intermediate lists
+x_temp = []
+y_temp = []
+
+#Adding the data for dead creatures per day
+for i in range(total_days):
+    x_temp.append(i+1)
+    y_temp.append(len(dead_creatures_list[i]))
+
+x_axes.append(x_temp.copy())
+y_axes.append(y_temp.copy())
+
+x_temp.clear()
+y_temp.clear()
+
+#Adding the data for population per day
+for i in range(total_days):
+    x_temp.append(i+1)
+    y_temp.append(len(creature_pops_list[i]))
+
+x_axes.append(x_temp.copy())
+y_axes.append(y_temp.copy())
+
+x_temp.clear()
+y_temp.clear()
