@@ -6,7 +6,10 @@ from matplotlib import pyplot as plt
 from matplotlib import style
 from matplotlib.pyplot import plot
 
+import Map
 import Creature
+import Food
+import LinkedList
 
 t_pi = 2 * m.pi
 
@@ -25,18 +28,6 @@ food_radius = 8.0
 time_step = 1
 total_time_steps_per_day = time_step
 
-class Food:
-    """The Food object that creatures can consume
-
-    Parameters
-    ------------
-    radius: the polar coordinate r of the Food object
-    theta: the polar coordinate theta of the Food object
-    theta_lim: how close a Creature needs to be to this Food in order for it to possibly be withing eating range"""
-    def __init__(self, radius, theta, theta_lim):
-        self.radius = radius
-        self.theta = theta
-        self.theta_lim = theta_lim
 
 def polar_to_cartesian(r, theta):
     cart_x = r * m.cos(theta)

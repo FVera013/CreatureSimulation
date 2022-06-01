@@ -1,3 +1,8 @@
+import random as rand
+import math as m
+
+t_pi = 2 * m.pi
+
 class Creature:
     """The Creature object that evolves
 
