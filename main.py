@@ -13,61 +13,27 @@ import LinkedList
 
 t_pi = 2 * m.pi
 
+#Map Instance Parameters
+map_radius = 6.0
+food_radius = 4.0
+time_step = 0.5
 initial_creatures_count = 10
 initial_food_amount = 500
 total_days = 30
+
+the_map = Map.Map(map_radius, food_radius, time_step, initial_creatures_count, initial_food_amount, total_days)
+
+#Creature Static Parameters
 eat_radius = 0.1
-
-#defines the max jerk_theta, third derivative of theta, the creature can achieve
 max_j_theta = 1
+max_offset_percent = 0.15
+base_energy = 10
 
-#max percent
-max_offset_percent = 0.01
-map_radius = 18.0
-food_radius = 8.0
-time_step = 1
-total_time_steps_per_day = time_step
+Creature.Creature.eat_radius = eat_radius
+Creature.Creature.max_j_theta = max_j_theta
+Creature.Creature.max_offset_percent = max_offset_percent
+Creature.Creature.base_energy = base_energy
 
-def creature_next_generation_handler(this_creature, cur_list_index, cur_day_index):
-    this_food_eaten = this_creature.food_eaten
-    past_list_index = (cur_list_index + 1) % 2
-
-    creature_pops_list[past_list_index].append(this_creature)
-
-    if this_food_eaten == 0:
-        Creature.creature_reset(this_creature)
-        dead_creatures_list[cur_day_index].append(this_creature)
-    elif this_food_eaten == 1:
-        Creature.creature_reset(this_creature)
-        living_creatures_list[cur_list_index].append(this_creature)
-    elif this_food_eaten > 1:
-        Creature.creature_reset(this_creature)
-        child_creature = copy.deepcopy(this_creature)
-        living_creatures_list[cur_list_index].append(this_creature)
-        living_creatures_list[cur_list_index].append(child_creature)
-
-def food_list_reset():
-    food_list.clear()
-    for i in range(initial_food_amount):
-        cur_radius = food_radius * rand.random()
-        food_list.append(Food(cur_radius, (t_pi * rand.random()) % t_pi, m.atan(eat_radius / cur_radius)))
-
-living_creatures_list = [[], []]
-final_creatures_list = []
-
-for each in range(initial_creatures_count):
-    cur_theta = (t_pi * rand.random()) % t_pi
-    cur_offset_percent = (1 + max_offset_percent * (2 * rand.random() - 1))
-    cur_direction = ((cur_theta + m.pi) * cur_offset_percent) % t_pi
-    living_creatures_list[0].append(Creature(map_radius*0.98, cur_theta, cur_direction))
-
-creature_pops_list = []
-dead_creatures_list = []
-for day in range(total_days):
-    creature_pops_list.append([])
-    dead_creatures_list.append([])
-
-food_list = []
 
 ########################################################################################################################
 ########################################################################################################################

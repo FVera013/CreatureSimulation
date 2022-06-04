@@ -43,9 +43,10 @@ class Creature:
 
     eat_radius = 0.1
     max_j_theta = 1
-    max_offset_percent = 0.10
+    max_offset_percent = 0.15
+    base_energy = 10
 
-    def __init__(self, radius, theta, direction, speed=1, d1_theta=0, d2_theta=0, food_eaten=0, energy_left=10):
+    def __init__(self, radius=0, theta=0, direction=0, speed=1, d1_theta=0, d2_theta=0, food_eaten=0, energy_left=base_energy):
         self.radius = radius
         self.theta = theta
         self.direction = direction
@@ -60,7 +61,7 @@ class Creature:
         max_offset_percent = self.max_offset_percent
         cur_theta = (t_pi * rand.random()) % t_pi
         cur_offset_percent = (1 + max_offset_percent * (2 * rand.random() - 1))
-        cur_direction = ((cur_theta + m.pi) * cur_offset_percent) % t_pi
+        cur_direction = (cur_theta + (m.pi * cur_offset_percent)) % t_pi
 
         self.radius = self.parent.radius
         self.theta = cur_theta
@@ -69,7 +70,7 @@ class Creature:
         self.d1_theta = 0
         self.d2_theta = 0
         self.food_eaten = 0
-        self.energy_left = 0
+        self.energy_left = self.base_energy
 
     def creature_movement(self):
         """A function that returns an array. The array determines the creature's new parameters after moving. If the
