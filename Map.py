@@ -1,3 +1,5 @@
+import copy
+
 import Creature
 import Food
 import LinkedList
@@ -84,6 +86,9 @@ class Map:
             old_food_node = self.food_children.remove_node(this_food_node)
             old_food_node.node_strip()
             del old_food_node
+            return True
+
+        return False
 
     def creature_next_generation_handler(self, creature_node, cur_day_index):
         this_creature = creature_node.data
@@ -94,20 +99,26 @@ class Map:
 
         if this_food_eaten == 0:
             this_dead_list = self.dead_creatures_data.find_node_by_index(cur_day_index)
-            this_dead_list.add_in_front(creature_node.copy())
+            this_dead_list.add_in_front(copy.deepcopy(creature_node))
 
         if this_food_eaten == 1:
             this_survivor_list = self.survivor_creatures_data.find_node_by_index(cur_day_index)
             this_survivor_list.add_in_front(creature_node.copy())
             if next_day_creature_dll is not None:
-                next_day_creature_dll.add_in_front(creature_node.copy())
+                next_day_creature = copy.deepcopy(this_creature).creature_reset()
+                next_day_creature_node = LinkedList.DNode(next_day_creature)
+                next_day_creature_dll.add_in_front(next_day_creature_node)
 
         elif this_food_eaten > 1:
             this_fecund_list = self.fecund_creatures_data.find_node_by_index(cur_day_index)
             this_fecund_list.add_in_front(creature_node.copy())
             if next_day_creature_dll is not None:
-                next_day_creature_dll.add_in_front(creature_node.copy())
-                next_day_creature_dll.add_in_front(creature_node.copy())
+                creature_offspring_1 = copy.deepcopy(this_creature).creature_reset()
+                creature_offspring_2 = copy.deepcopy(this_creature).creature_reset()
+                creature_offspring_1_node = LinkedList.DNode(creature_offspring_1)
+                creature_offspring_2_node = LinkedList.DNode(creature_offspring_2)
+                next_day_creature_dll.add_in_front(creature_offspring_1_node)
+                next_day_creature_dll.add_in_front(creature_offspring_2_node)
 
 
 def polar_to_cartesian(r, theta):

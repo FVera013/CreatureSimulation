@@ -73,13 +73,13 @@ class Creature:
         self.energy_left = self.base_energy
 
     def creature_movement(self):
-        """A function that returns an array. The array determines the creature's new parameters after moving. If the
-        creature did not move, an empty array will be returned."""
+        """A function that returns a boolean. The function will return False if the creature could/did not move and
+        True if it did."""
         print("In creature_movement function")
         cur_energy = self.energy_left
 
         if cur_energy <= 0:
-            return []
+            return False
 
         time_step = self.map.time_step
         map_radius = self.map.map_radius
@@ -110,7 +110,13 @@ class Creature:
         if end_r >= map_radius or cur_energy <= 0:
             cur_energy = 0
 
-        return [end_r, end_theta, cur_o_theta, cur_v_theta, cur_a_theta, cur_energy]
+        self.radius = end_r
+        self.theta = end_theta
+        self.direction = cur_o_theta
+        self.d1_theta = cur_v_theta
+        self.d2_theta = cur_a_theta
+        self.energy_left = cur_energy
+        return True
 
     def distance_checker(self, this_food):
         """Returns true if the creature and food are in range of each other."""

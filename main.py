@@ -34,13 +34,44 @@ Creature.Creature.max_j_theta = max_j_theta
 Creature.Creature.max_offset_percent = max_offset_percent
 Creature.Creature.base_energy = base_energy
 
-
 ########################################################################################################################
 ########################################################################################################################
 #Simulation Loop
 ########################################################################################################################
 
-#Initializing this variable before the loop, so it doesn't reset every time the loop starts over
+#Initializing things before the loop begins
+the_map.initialize_creature_list()
+creature_list_list = the_map.creature_children
+
+#Do this everyday
+for cur_day_index in range(total_days):
+    the_map.food_list_reset()
+    food_list_today = the_map.food_radius
+
+    cur_creatures_list = (creature_list_list.find_node_by_index(cur_day_index)).data
+
+    #While creatures can move, keep looping
+    initial_creatures_moving = cur_creatures_list.find_length()
+    tired_creatures = 0
+    food_on_map = the_map.food_radius.find_length()
+
+    while (initial_creatures_moving - tired_creatures) * food_on_map > 0:
+        tired_creatures = 0
+        cur_creature_node = cur_creatures_list.head_val
+        while cur_creature_node is not None:
+            cur_food_node = food_list_today.head_val
+            cur_creature = cur_creature_node.data
+            has_moved = cur_creature.creature_movement
+            tired_creatures += 0 if has_moved else 1
+            while (cur_food_node is not None) and has_moved:
+                next_food_node = cur_food_node.front
+                was_eaten = the_map.eat_food_handler(cur_creature_node, cur_food_node)
+                food_on_map -= 1 if was_eaten else 0
+                cur_food_node = next_food_node
+
+            cur_creature_node = cur_creature_node.front
+            #CONTINUE WRITING SIMULATION CODE
+
 """
 creature_list_index = 0
 
