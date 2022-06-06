@@ -49,7 +49,7 @@ class Creature:
     max_offset_percent = 0.15
     base_energy = 10.0
 
-    def __init__(self, map=None, radius=0.0, theta=0.0, direction=0.0, speed=1.0, d1_theta=0.0, d2_theta=0.0, food_eaten=0,
+    def __init__(self, map=None, radius=0.0, theta=0.0, direction=0.0, speed=1.5, d1_theta=0.0, d2_theta=0.0, food_eaten=0,
                  energy_left=base_energy):
         self.map = map
         self.radius = radius
@@ -161,6 +161,7 @@ class Creature:
 
         d = m.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
         if d <= self.eat_radius:
+            self.food_eaten += 1
             return True
 
         return False

@@ -8,23 +8,33 @@ import Creature
 
 t_pi = 2 * m.pi
 
+########################################################################################################################
+########################################################################################################################
+#User Variables
+########################################################################################################################
+
 #Map Instance Parameters
-map_radius = 10.0
-food_radius = 9.5
+map_radius = 8.0
+food_radius = 7.5
 time_step = 0.01
 initial_creatures_count = 1
-initial_food_amount = 500
-total_days = 1
-
-the_map = Map.Map(map_radius, food_radius, time_step, initial_creatures_count, initial_food_amount, total_days)
+initial_food_amount = 90
+total_days = 25
 
 #Creature Static Parameters
-eat_radius = 4.0
+eat_radius = 0.1
 max_v_theta = 0.66
 max_a_theta = 0.1
 max_j_theta = 2.2
 max_offset_percent = 0.15
 base_energy = 30.0
+
+########################################################################################################################
+########################################################################################################################
+#Object Initialization
+########################################################################################################################
+
+the_map = Map.Map(map_radius, food_radius, time_step, initial_creatures_count, initial_food_amount, total_days)
 
 Creature.Creature.eat_radius = eat_radius
 Creature.Creature.max_v_theta = max_v_theta
@@ -38,9 +48,10 @@ Creature.Creature.base_energy = base_energy
 #Simulation Loop
 ########################################################################################################################
 
-#Debugging stuff
-my_x_vals = []
-my_y_vals = []
+##Debugging stuff
+#my_x_vals = []
+#my_y_vals = []
+##Debugging stuff
 
 #Initializing things before the loop begins
 the_map.initialize_creature_lists()
@@ -67,11 +78,11 @@ for cur_day_index in range(total_days):
         tired_creatures = 0
         cur_creature_node = cur_creatures_list.head_val
 
-        # For Debugging ONLY
-        this_x, this_y = Map.polar_to_cartesian(cur_creature_node.data.radius, cur_creature_node.data.theta)
-        my_x_vals.append(this_x)
-        my_y_vals.append(this_y)
-        # For Debugging ONLY
+        ## For Debugging ONLY
+        #this_x, this_y = Map.polar_to_cartesian(cur_creature_node.data.radius, cur_creature_node.data.theta)
+        #my_x_vals.append(this_x)
+        #my_y_vals.append(this_y)
+        ## For Debugging ONLY
 
         while cur_creature_node is not None:
             cur_food_node = food_list_today.head_val
@@ -79,11 +90,11 @@ for cur_day_index in range(total_days):
             has_moved = cur_creature.creature_movement()
             tired_creatures += 0 if has_moved else 1
 
-            # For Debugging ONLY
-            this_x, this_y = Map.polar_to_cartesian(cur_creature_node.data.radius, cur_creature_node.data.theta)
-            my_x_vals.append(this_x)
-            my_y_vals.append(this_y)
-            # For Debugging ONLY
+            ## For Debugging ONLY
+            #this_x, this_y = Map.polar_to_cartesian(cur_creature_node.data.radius, cur_creature_node.data.theta)
+            #my_x_vals.append(this_x)
+            #my_y_vals.append(this_y)
+            ## For Debugging ONLY
 
             while (cur_food_node is not None) and has_moved:
                 next_food_node = cur_food_node.front
@@ -108,8 +119,23 @@ print("done")
 ########################################################################################################################
 #Data Processing
 ########################################################################################################################
-circle2 = plt.Circle((0, 0), 10, color='r', fill=False)
-plt.gca().add_patch(circle2)
-plt.scatter(my_x_vals, my_y_vals, s=0.01)
+
+day_arr = []
+live_creatures_arr = []
+for cur_day_index in range(total_days):
+    day_arr.append(cur_day_index+1)
+    live_creatures_arr.append(the_map.creature_children.find_node_by_index(cur_day_index).data.find_length())
+
+fig = plt.figure()
+ax = fig.add_axes([0, 0, 1, 1])
+ax.bar(day_arr, live_creatures_arr)
 plt.show()
-print("done 2")
+
+
+#Debugging stuff
+#circle2 = plt.Circle((0, 0), map_radius, color='r', fill=False)
+#plt.gca().add_patch(circle2)
+#plt.scatter(my_x_vals, my_y_vals, s=0.01)
+#plt.show()
+#print("done 2")
+##Debugging stuff
