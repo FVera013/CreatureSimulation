@@ -210,12 +210,19 @@ class DLinkedList:
         return cur_node
 
 
-def make_empty_dll(length, data_type=None):
+def make_empty_dll(length):
     new_dll = DLinkedList()
     for times in range(length):
-        new_dll.add_in_front(DNode(data_type))
+        new_dll.add_in_front(DNode())
 
     return new_dll
+
+def make_empty_2d_dll(length):
+    new_2d_dll = DLinkedList()
+    for times in range(length):
+        new_2d_dll.add_in_front(DNode(DLinkedList()))
+
+    return new_2d_dll
 
 class DNode:
     """The object that will work with the LinkedList to store data and 2 pointers, a front and a back

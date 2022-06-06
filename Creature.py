@@ -7,9 +7,6 @@ import math as m
 
 t_pi = 2 * m.pi
 
-polar_to_cartesian = Map.cartesian_to_polar()
-cartesian_to_polar = Map.cartesian_to_polar()
-
 class Creature:
     """The Creature object that evolves
 
@@ -23,6 +20,8 @@ class Creature:
 
     Instance Parameters
     ------------
+    map: The associated map class (must be an instance of Map in order to work properly)
+    \b
     radius: the polar coordinate r of the Creature object
     \b
     theta: the polar coordinate theta of the Creature object
@@ -37,16 +36,16 @@ class Creature:
     \b
     food_eaten: the amount of food the Creature has currently consumed
     \b
-    energy_left: The amount of energy the Creature currently has left to move
-    \b
-    map: The associated map class (must be an instance of Map in order to work properly)"""
+    energy_left: The amount of energy the Creature currently has left to move"""
 
     eat_radius = 0.1
-    max_j_theta = 1
+    max_j_theta = 1.0
     max_offset_percent = 0.15
-    base_energy = 10
+    base_energy = 10.0
 
-    def __init__(self, radius=0, theta=0, direction=0, speed=1, d1_theta=0, d2_theta=0, food_eaten=0, energy_left=base_energy):
+    def __init__(self, map=None, radius=0.0, theta=0.0, direction=0.0, speed=1.0, d1_theta=0.0, d2_theta=0.0, food_eaten=0,
+                 energy_left=base_energy):
+        self.map = map
         self.radius = radius
         self.theta = theta
         self.direction = direction
@@ -55,7 +54,6 @@ class Creature:
         self.speed = speed
         self.food_eaten = food_eaten
         self.energy_left = energy_left
-        self.map = None
 
     def creature_reset(self):
         max_offset_percent = self.max_offset_percent
@@ -63,7 +61,7 @@ class Creature:
         cur_offset_percent = (1 + max_offset_percent * (2 * rand.random() - 1))
         cur_direction = (cur_theta + (m.pi * cur_offset_percent)) % t_pi
 
-        self.radius = self.parent.radius
+        self.radius = self.map.map_radius
         self.theta = cur_theta
         self.direction = cur_direction
 
@@ -75,7 +73,6 @@ class Creature:
     def creature_movement(self):
         """A function that returns a boolean. The function will return False if the creature could/did not move and
         True if it did."""
-        print("In creature_movement function")
         cur_energy = self.energy_left
 
         if cur_energy <= 0:
@@ -90,7 +87,7 @@ class Creature:
         cur_radius = self.radius
         cur_theta = self.theta
 
-        start_x, start_y = polar_to_cartesian(cur_radius, cur_theta)
+        start_x, start_y = Map.polar_to_cartesian(cur_radius, cur_theta)
 
         cur_speed = self.speed
         # Current orientation, first derivative of orientation, and second derivative of orientation, respectively.
@@ -103,8 +100,8 @@ class Creature:
         cur_o_theta += (time_step * cur_v_theta + (1 / 2) * (time_step ** 2) * cur_a_theta + (1 / 6) * (
                     time_step ** 3) * this_j_theta) % t_pi
 
-        d_x, d_y = polar_to_cartesian(cur_speed * time_step, cur_o_theta)
-        end_r, end_theta = cartesian_to_polar(start_x + d_x, start_y + d_y)
+        d_x, d_y = Map.polar_to_cartesian(cur_speed * time_step, cur_o_theta)
+        end_r, end_theta = Map.cartesian_to_polar(start_x + d_x, start_y + d_y)
 
         cur_energy -= time_step * (cur_speed ** 2)
         if end_r >= map_radius or cur_energy <= 0:
@@ -140,3 +137,7 @@ class Creature:
             return True
 
         return False
+
+    def copy(self):
+        return Creature(self.map, self.radius, self.theta, self.direction, self.speed, self.d1_theta, self.d2_theta,
+                        self.food_eaten, self.energy_left)

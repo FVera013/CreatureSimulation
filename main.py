@@ -1,33 +1,29 @@
-import copy
-import random as rand
 import math as m
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib import style
-from matplotlib.pyplot import plot
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('tkagg')
 
 import Map
 import Creature
-import Food
-import LinkedList
 
 t_pi = 2 * m.pi
 
 #Map Instance Parameters
-map_radius = 6.0
-food_radius = 4.0
-time_step = 0.5
-initial_creatures_count = 10
-initial_food_amount = 500
-total_days = 30
+map_radius = 10.0
+food_radius = 9.0
+time_step = 0.01
+initial_creatures_count = 1
+initial_food_amount = 1
+total_days = 1
 
 the_map = Map.Map(map_radius, food_radius, time_step, initial_creatures_count, initial_food_amount, total_days)
 
 #Creature Static Parameters
-eat_radius = 0.1
-max_j_theta = 1
+eat_radius = 0.15
+max_j_theta = 55.0
 max_offset_percent = 0.15
-base_energy = 10
+base_energy = 30.0
 
 Creature.Creature.eat_radius = eat_radius
 Creature.Creature.max_j_theta = max_j_theta
@@ -39,30 +35,53 @@ Creature.Creature.base_energy = base_energy
 #Simulation Loop
 ########################################################################################################################
 
+#Debugging stuff
+my_x_vals = []
+my_y_vals = []
+
 #Initializing things before the loop begins
-the_map.initialize_creature_list()
+the_map.initialize_creature_lists()
 creature_list_list = the_map.creature_children
 
 #Do this everyday
 for cur_day_index in range(total_days):
+    print("=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n", "+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+\n",
+          "DAY " + str(cur_day_index+1), "\n=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n",
+          "+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+")
     the_map.food_list_reset()
-    food_list_today = the_map.food_radius
+    food_list_today = the_map.food_children
 
     cur_creatures_list = (creature_list_list.find_node_by_index(cur_day_index)).data
 
     #While creatures can move, keep looping
     initial_creatures_moving = cur_creatures_list.find_length()
     tired_creatures = 0
-    food_on_map = the_map.food_radius.find_length()
+    food_on_map = food_list_today.find_length()
 
+    # While there are still creatures moving and food on the map => Move a creature => Check if any food is within its
+    # vicinity after moving
     while (initial_creatures_moving - tired_creatures) * food_on_map > 0:
         tired_creatures = 0
         cur_creature_node = cur_creatures_list.head_val
+
+        # For Debugging ONLY
+        this_x, this_y = Map.polar_to_cartesian(cur_creature_node.data.radius, cur_creature_node.data.theta)
+        my_x_vals.append(this_x)
+        my_y_vals.append(this_y)
+        # For Debugging ONLY
+
         while cur_creature_node is not None:
             cur_food_node = food_list_today.head_val
             cur_creature = cur_creature_node.data
-            has_moved = cur_creature.creature_movement
+            has_moved = cur_creature.creature_movement()
             tired_creatures += 0 if has_moved else 1
+
+            # For Debugging ONLY
+            this_x, this_y = Map.polar_to_cartesian(cur_creature_node.data.radius, cur_creature_node.data.theta)
+            my_x_vals.append(this_x)
+            my_y_vals.append(this_y)
+            # For Debugging ONLY
+
             while (cur_food_node is not None) and has_moved:
                 next_food_node = cur_food_node.front
                 was_eaten = the_map.eat_food_handler(cur_creature_node, cur_food_node)
@@ -70,103 +89,21 @@ for cur_day_index in range(total_days):
                 cur_food_node = next_food_node
 
             cur_creature_node = cur_creature_node.front
-            #CONTINUE WRITING SIMULATION CODE
 
-"""
-creature_list_index = 0
+    # After all creatures have moved and/or there is no more food on the map, decide whether each creature should move
+    # to the next generation, reproduce or die
+    cur_creature_node = cur_creatures_list.head_val
+    while cur_creature_node is not None:
+        cur_creature = cur_creature_node.data
+        the_map.creature_next_generation_handler(cur_creature_node, cur_day_index)
+        cur_creature_node = cur_creature_node.front
+    #CONTINUE WRITING SIMULATION CODE
 
-#Need to repeat this for every day
-for day in range(total_days):
-    #Reset food_list at the very beginning of every day
-    food_list_reset()
+print("done")
 
-    #Update creature_list_index everytime the loop restarts
-    creature_list_index = day % 2
-
-    #The rest of the logic for the simulation
-    cur_creatures_list = living_creatures_list[creature_list_index]
-    creatures_moving = len(cur_creatures_list)
-
-    #While loop instead of a for loop, because it makes handling simpler
-    while creatures_moving > 0:
-        #Move each creature in order
-        for cur_creature in cur_creatures_list:
-            new_creature_params = []
-            new_creature_params.clear()
-            new_creature_params = creature_movement(cur_creature)
-            #What to do if the list returned empty (creature had no energy at function call)
-            if len(new_creature_params) == 0:
-                creature_next_generation_handler(cur_creature, creature_list_index, day)
-                continue
-
-            #What to do if the list returned with 0 current energy
-            if new_creature_params[5] <= 0:
-                creature_next_generation_handler(cur_creature, creature_list_index, day)
-                continue
-
-            #What to do if the list returned with more than 0 current energy
-
-        #After moving every creature, check if they can eat and handle if they can
-        for cur_creature in cur_creatures_list:
-            cur_food_index = 0
-            #Check if the creatures have eaten a food, and update the food list if they have. While loop instead of a
-            #for loop because it makes handling simpler.
-            while cur_food_index < len(food_list):
-                cur_food = food_list[cur_food_index]
-                if creature_eat_handler(cur_creature, cur_food):
-                    #Update the food list and decrement the index counter by 1 to account for the increment by 1 soon
-                    del food_list[cur_food_index]
-                    cur_food_index -= 1
-
-                #Increment index counter
-                cur_food_index += 1
-
-        #Check if there's still food on the map
-        if len(food_list) == 0:
-            creatures_moving = 0
-
-    #Moving the next generation of creatures to the next cur_creatures list and recording data
-    next_creature_list_index = (creature_list_index + 1) % 2
-    #Updating the current list that was being worked with, the one that will be worked with and other data storage lists
-    for creature in cur_creatures_list:
-        creature_next_generation_handler(creature, creature_list_index, day)
-
-creature_pops_list[total_days-1].append(copy.deepcopy(living_creatures_list[creature_list_index]))
-"""
 ########################################################################################################################
 ########################################################################################################################
 #Data Processing
 ########################################################################################################################
-
-#Plotting the Data
-x_axes = []
-y_axes = []
-
-#Intermediate lists
-x_temp = []
-y_temp = []
-
-#Adding the data for dead creatures per day
-for i in range(total_days):
-    x_temp.append(i+1)
-    y_temp.append(len(dead_creatures_list[i]))
-
-x_axes.append(x_temp.copy())
-y_axes.append(y_temp.copy())
-
-x_temp.clear()
-y_temp.clear()
-
-#Adding the data for population per day
-for i in range(total_days):
-    x_temp.append(i+1)
-    y_temp.append(len(creature_pops_list[i]))
-
-x_axes.append(x_temp.copy())
-y_axes.append(y_temp.copy())
-
-plot(x_temp, y_temp)
-
-x_temp.clear()
-y_temp.clear()
-
+plt.plot(my_x_vals, my_x_vals)
+plt.show()
