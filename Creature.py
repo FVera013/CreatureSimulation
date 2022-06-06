@@ -14,6 +14,10 @@ class Creature:
     ------------
     eat_radius: The distance a creature must be from food in order to eat it
     \b
+    max_v_theta: The maximum velocity (first derivative) of theta that can be attained each time step
+    \b
+    max_a_theta: The maximum acceleration (second derivative) of theta that can be attained each time step
+    \b
     max_j_theta: The maximum jerk (third derivative) of theta that can be attained each time step
     \b
     max_offset_percent: The maximum variation a creature  has from facing the center
@@ -39,6 +43,8 @@ class Creature:
     energy_left: The amount of energy the Creature currently has left to move"""
 
     eat_radius = 0.1
+    max_v_theta = m.pi
+    max_a_theta = m.pi/8
     max_j_theta = 1.0
     max_offset_percent = 0.15
     base_energy = 10.0
@@ -82,7 +88,7 @@ class Creature:
         map_radius = self.map.map_radius
 
         # Third derivative of orientation is random every time step
-        this_j_theta = (rand.random() * 2 - 1) * self.max_j_theta
+        this_j_theta = ((2 * rand.random()) - 1) * self.max_j_theta
 
         cur_radius = self.radius
         cur_theta = self.theta
@@ -95,13 +101,22 @@ class Creature:
         cur_v_theta = self.d1_theta
         cur_a_theta = self.d2_theta
 
-        cur_a_theta += (time_step * this_j_theta) % t_pi
-        cur_v_theta += (time_step * cur_a_theta + (1 / 2) * (time_step ** 2) * this_j_theta) % t_pi
+        max_a_theta = self.max_a_theta
+        max_v_theta = self.max_v_theta
+
+        cur_a_theta += time_step * this_j_theta
+        if abs(cur_a_theta) > max_a_theta:
+            cur_a_theta = max_a_theta * cur_a_theta/abs(cur_a_theta)
+
+        cur_v_theta += time_step * cur_a_theta + (1 / 2) * (time_step ** 2) * this_j_theta
+        if abs(cur_v_theta) > max_v_theta:
+            cur_v_theta = max_v_theta * cur_v_theta/abs(cur_v_theta)
+
         cur_o_theta += (time_step * cur_v_theta + (1 / 2) * (time_step ** 2) * cur_a_theta + (1 / 6) * (
                     time_step ** 3) * this_j_theta) % t_pi
 
-        d_x, d_y = Map.polar_to_cartesian(cur_speed * time_step, cur_o_theta)
-        end_r, end_theta = Map.cartesian_to_polar(start_x + d_x, start_y + d_y)
+        d_x, d_y = Map.polar_to_cartesian((cur_speed * time_step), cur_o_theta)
+        end_r, end_theta = Map.cartesian_to_polar((start_x + d_x), (start_y + d_y))
 
         cur_energy -= time_step * (cur_speed ** 2)
         if end_r >= map_radius or cur_energy <= 0:
@@ -113,7 +128,7 @@ class Creature:
         self.d1_theta = cur_v_theta
         self.d2_theta = cur_a_theta
         self.energy_left = cur_energy
-        return True
+        return False if cur_energy == 0 else True
 
     def distance_checker(self, this_food):
         """Returns true if the creature and food are in range of each other."""
@@ -125,15 +140,27 @@ class Creature:
             t1 = self.theta
             t2 = this_food.theta
 
-            d = m.sqrt(r1 * r1 + r2 * r2 - 2 * r1 * r2 * m.cos(t1 - t2))
+            x1, y1 = Map.polar_to_cartesian(r1, t1)
+            x2, y2 = Map.polar_to_cartesian(r2, t2)
+
+            d = m.sqrt((x1-x2)**2 + (y1-y2)**2)
 
             if d <= self.eat_radius:
                 return True
         return False
 
     def creature_eat_handler(self, this_food):
-        if self.distance_checker(this_food):
-            self.food_eaten = self.food_eaten + 1
+        r1 = self.radius
+        r2 = this_food.radius
+
+        t1 = self.theta
+        t2 = this_food.theta
+
+        x1, y1 = Map.polar_to_cartesian(r1, t1)
+        x2, y2 = Map.polar_to_cartesian(r2, t2)
+
+        d = m.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        if d <= self.eat_radius:
             return True
 
         return False

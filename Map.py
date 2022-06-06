@@ -136,6 +136,7 @@ class Map:
 
 
 def polar_to_cartesian(r, theta):
+    theta %= t_pi
     cart_x = r * m.cos(theta)
     cart_y = r * m.sin(theta)
 
@@ -148,13 +149,18 @@ def cartesian_to_polar(cart_x, cart_y):
     theta = 0 if r == 0 else -1
     quadrant = 1
     if theta == -1:
-        if (cart_x <= 0) and (cart_y > 0): quadrant = 2
-        if (cart_x < 0) and (cart_y <= 0): quadrant = 3
-        if (cart_x >= 0) and (cart_y < 0): quadrant = 4
-        if (cart_x == 0) or (cart_y == 0): theta = (quadrant - 1) * (m.pi / 2)
-        if theta != -1:
-            theta = ((quadrant - 1) * (m.pi / 2)) + m.atan(abs((cart_y / cart_x) ** ((-1) ** (quadrant - 1))))
-
-        theta = theta % t_pi
+        if (cart_x > 0) and (cart_y >= 0):
+            quadrant = 1
+            theta = m.atan(cart_y/cart_x)
+        elif (cart_x <= 0) and (cart_y > 0):
+            quadrant = 2
+            theta = (m.pi/2) + m.atan(abs(cart_x/cart_y))
+        elif (cart_x < 0) and (cart_y <= 0):
+            quadrant = 3
+            theta = m.pi + m.atan(cart_y/cart_x)
+        elif (cart_x >= 0) and (cart_y < 0):
+            quadrant = 4
+            theta = (3 * m.pi / 2) + m.atan(abs(cart_x/cart_y))
+        theta %= t_pi
 
     return r, theta

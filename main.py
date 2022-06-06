@@ -1,5 +1,4 @@
 import math as m
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('tkagg')
@@ -11,21 +10,25 @@ t_pi = 2 * m.pi
 
 #Map Instance Parameters
 map_radius = 10.0
-food_radius = 9.0
+food_radius = 9.5
 time_step = 0.01
 initial_creatures_count = 1
-initial_food_amount = 1
+initial_food_amount = 500
 total_days = 1
 
 the_map = Map.Map(map_radius, food_radius, time_step, initial_creatures_count, initial_food_amount, total_days)
 
 #Creature Static Parameters
-eat_radius = 0.15
-max_j_theta = 55.0
+eat_radius = 4.0
+max_v_theta = 0.66
+max_a_theta = 0.1
+max_j_theta = 2.2
 max_offset_percent = 0.15
 base_energy = 30.0
 
 Creature.Creature.eat_radius = eat_radius
+Creature.Creature.max_v_theta = max_v_theta
+Creature.Creature.max_a_theta = max_a_theta
 Creature.Creature.max_j_theta = max_j_theta
 Creature.Creature.max_offset_percent = max_offset_percent
 Creature.Creature.base_energy = base_energy
@@ -105,5 +108,8 @@ print("done")
 ########################################################################################################################
 #Data Processing
 ########################################################################################################################
-plt.plot(my_x_vals, my_x_vals)
+circle2 = plt.Circle((0, 0), 10, color='r', fill=False)
+plt.gca().add_patch(circle2)
+plt.scatter(my_x_vals, my_y_vals, s=0.01)
 plt.show()
+print("done 2")
