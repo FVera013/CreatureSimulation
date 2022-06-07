@@ -1,6 +1,7 @@
 import math as m
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 matplotlib.use('tkagg')
 
 import Map
@@ -17,9 +18,9 @@ t_pi = 2 * m.pi
 map_radius = 8.0
 food_radius = 7.5
 time_step = 0.01
-initial_creatures_count = 1
+initial_creatures_count = 6
 initial_food_amount = 90
-total_days = 25
+total_days = 8
 
 #Creature Static Parameters
 eat_radius = 0.1
@@ -122,13 +123,46 @@ print("done")
 
 day_arr = []
 live_creatures_arr = []
+dead_creatures_arr = []
+survivor_creatures_arr = []
+fecund_creatures_arr = []
 for cur_day_index in range(total_days):
     day_arr.append(cur_day_index+1)
     live_creatures_arr.append(the_map.creature_children.find_node_by_index(cur_day_index).data.find_length())
+    dead_creatures_arr.append(the_map.dead_creatures_data.find_node_by_index(cur_day_index).data.find_length())
+    survivor_creatures_arr.append(the_map.survivor_creatures_data.find_node_by_index(cur_day_index).data.find_length())
+    fecund_creatures_arr.append(the_map.fecund_creatures_data.find_node_by_index(cur_day_index).data.find_length())
 
-fig = plt.figure()
-ax = fig.add_axes([0, 0, 1, 1])
-ax.bar(day_arr, live_creatures_arr)
+ind = np.arange(total_days)
+
+fig, ax = plt.subplots()
+rects_1 = ax.bar(ind + 0.00, live_creatures_arr, color='black', width=0.2)
+rects_2 = ax.bar(ind + 0.20, dead_creatures_arr, color='r', width=0.2)
+rects_3 = ax.bar(ind + 0.40, survivor_creatures_arr, color='b', width=0.2)
+rects_4 = ax.bar(ind + 0.60, fecund_creatures_arr, color='g', width=0.2)
+
+ax.set_ylabel('Number of Creatures')
+ax.set_title('Creatures Data')
+ax.set_xticks(ind)
+
+ax.legend((rects_1[0], rects_2[0], rects_3[0], rects_4[0]), ('Living', 'Dead', 'Survivors', 'Fecund'))
+
+def autolabel(rects):
+    """
+    Attach a text label above each bar displaying its height
+    """
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+                '%d' % int(height),
+                ha='center', va='bottom')
+
+
+autolabel(rects_1)
+autolabel(rects_2)
+autolabel(rects_3)
+autolabel(rects_4)
+
 plt.show()
 
 
